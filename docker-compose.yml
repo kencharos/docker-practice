@@ -1,0 +1,37 @@
+# either build or image
+# if set build, image_repository is made automatic from directory name. for example "tutorial_sinatra"
+
+# "same" docker run -d -name sinatra <you>/sinatra
+# adding fulentd options -> --log-driver=fluentd --log-opt=fluentd-address=192.168.99.100:8888 --log-opt fluentd-tag=docker.{{.Name}}
+sinatra:
+  build: ./sinatra
+  #image: <you>/sinatra
+#  ports:
+   #- "4567:4567"
+  log_driver: "fluentd"
+  log_opt:
+    fluentd-address: "localhost:8888"
+    fluentd-tag: "docker.{{.Name}}"
+  # for build this image first.
+  links:
+    - td-agent:td-agent
+# "same" docker run -d --ports 80:80 --links sinatra:sinatra <you>/nginx
+nginx:
+  build: ./nginx
+  #image: <you>/nginx
+  ports:
+    - "80:80"
+  links:
+    - sinatra:sinatra  
+  log_driver: "fluentd"
+  log_opt:
+    fluentd-address: "localhost:8888"
+    fluentd-tag: "docker.{{.Name}}"
+# "same" docker run --name td-agent -v //c/Users/hoge/log/:/var/log/td-agent -p 8888:8888 tutorial_td-agent
+td-agent:
+  build: ./td-agent
+  #image: <you>/td-agent
+  volumes:
+    - /c/Users/<your domain user>/log/:/var/log/td-agent/
+  ports:
+    - "8888:8888"
